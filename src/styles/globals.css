@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0D0F11;
+  --card: #151920;
+  --border: #1E2530;
+  --text: #E8ECF1;
+  --muted: #6B7A8D;
+  --blue: #3B82F6;
+  --cyan: #06B6D4;
+  --purple: #8B5CF6;
+  --amber: #F59E0B;
+  --pink: #EC4899;
+  --green: #22C55E;
+  --red: #EF4444;
+  --gray: #6B7280;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  margin: 0;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.warning  { color: var(--amber); }
+.muted    { color: var(--muted); }
+
+@keyframes flash-green {
+  0%   { background-color: rgba(34, 197, 94, 0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-red {
+  0%   { background-color: rgba(239, 68, 68, 0.25); }
+  100% { background-color: transparent; }
+}
+.flash-up   { animation: flash-green 1.2s ease-out; }
+.flash-down { animation: flash-red   1.2s ease-out; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, #1e2530 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
