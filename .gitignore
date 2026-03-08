@@ -1,1 +1,3 @@
 node_modules/\n.env\ndist/\n.env.local
+node_modules/
+dist/
