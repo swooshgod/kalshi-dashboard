@@ -7,8 +7,21 @@ import 'dotenv/config';
 import express from 'express';
 import cors    from 'cors';
 import { createSign } from 'crypto';
-import { readFileSync } from 'fs';
-import { homedir } from 'os';
+import { readFileSync, existsSync } from 'fs';
+import { homedir, join } from 'os';
+import { createRequire } from 'module';
+
+// Strategy performance DB (SQLite) — graceful degradation if not available
+let getStrategyStats, getAllStats, getRecentBets;
+try {
+  const dbPath = new URL('../../../../clawd/skills/kalshi-weather/strategy-db.mjs', import.meta.url).pathname;
+  if (existsSync(dbPath)) {
+    const mod = await import(dbPath);
+    getStrategyStats = mod.getStrategyStats;
+    getAllStats      = mod.getAllStats;
+    getRecentBets    = mod.getRecentBets;
+  }
+} catch { /* DB not available on this host */ }
 
 const app  = express();
 const PORT = process.env.PROXY_PORT || process.env.PORT || 3001;
@@ -91,6 +104,25 @@ app.all('/api/*', async (req, res) => {
   } catch (err) {
     res.status(502).json({ error: err.message });
   }
+});
+
+// ── Strategy Performance API ─────────────────────────────────────────────────
+app.get('/perf/all', (_, res) => {
+  if (!getAllStats) return res.json({ error: 'DB not available', strategies: [] });
+  try { res.json({ strategies: getAllStats(), updatedAt: new Date().toISOString() }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/perf/:strategy', (req, res) => {
+  if (!getStrategyStats) return res.status(503).json({ error: 'DB not available' });
+  try { res.json(getStrategyStats(req.params.strategy)); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/perf-bets/recent', (req, res) => {
+  if (!getRecentBets) return res.json({ bets: [] });
+  try { res.json({ bets: getRecentBets(parseInt(req.query.limit) || 50) }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/health', (_, res) => res.json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...' }));

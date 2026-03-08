@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useKalshiData }     from './hooks/useKalshiData.js';
 import { usePortfolioStats } from './hooks/usePortfolioStats.js';
 import { useWebSocket }      from './hooks/useWebSocket.js';
@@ -13,8 +13,10 @@ import { OpenPositions }    from './components/OpenPositions.jsx';
 import { DailyPnL }         from './components/DailyPnL.jsx';
 import { EdgeMetrics }      from './components/EdgeMetrics.jsx';
 import { RiskMonitor }      from './components/RiskMonitor.jsx';
+import StrategyDashboard    from './components/StrategyDashboard.jsx';
 
 export default function App() {
+  const [page, setPage] = useState('portfolio');
   const { settlements, positions, balance, equityCurve, loading, error, lastUpdated, refresh } =
     useKalshiData();
 
@@ -46,8 +48,30 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: '#0D0F11' }}>
       <Header stats={headerStats} loading={loading} lastUpdated={lastUpdated} onRefresh={refresh} />
 
-      {/* Main content — pushed below fixed header */}
-      <main style={{ paddingTop: 72 }} className="px-4 pb-8 max-w-screen-2xl mx-auto">
+      {/* Page nav */}
+      <div style={{ paddingTop: 72, borderBottom: '1px solid #1E2530', background: '#0D0F11', position: 'sticky', top: 72, zIndex: 40 }}>
+        <div className="px-4 max-w-screen-2xl mx-auto flex gap-1">
+          {['portfolio', 'strategies'].map(p => (
+            <button key={p} onClick={() => setPage(p)}
+              className="px-4 py-2.5 text-sm capitalize transition-colors"
+              style={{
+                borderBottom: page === p ? '2px solid #3B82F6' : '2px solid transparent',
+                color: page === p ? '#E8ECF1' : '#6B7A8D',
+                background: 'none', border: 'none',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+              {p === 'portfolio' ? '📊 Portfolio' : '🔭 Strategy Performance'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Strategy Performance page */}
+      {page === 'strategies' && <StrategyDashboard />}
+
+      {/* Portfolio page */}
+      <main style={{ display: page === 'portfolio' ? 'block' : 'none' }}
+            className="px-4 pb-8 max-w-screen-2xl mx-auto">
 
         {error && (
           <div className="mt-4 px-4 py-3 rounded text-sm"
