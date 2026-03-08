@@ -8,29 +8,30 @@ import express from 'express';
 import cors    from 'cors';
 import { createSign } from 'crypto';
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { homedir } from 'os';
 
-const app     = express();
-const PORT    = process.env.PROXY_PORT || 3001;
-const BASE    = 'https://api.elections.kalshi.com/trade-api/v2';
-const KEY_ID  = process.env.KALSHI_API_KEY_ID;
+const app  = express();
+const PORT = process.env.PROXY_PORT || process.env.PORT || 3001;
+const BASE = 'https://api.elections.kalshi.com/trade-api/v2';
 
-// Support key as env var (Railway) or file path (local)
-const KEY_PATH = (process.env.KALSHI_PRIVATE_KEY_PATH || '~/.kalshi/private_key.pem')
-  .replace(/^~/, homedir());
+// Accept both naming conventions
+const KEY_ID = process.env.KALSHI_API_KEY_ID || process.env.KALSHI_API_KEY;
+if (!KEY_ID) { console.error('Missing env var: KALSHI_API_KEY_ID (or KALSHI_API_KEY)'); process.exit(1); }
 
-if (!KEY_ID) { console.error('KALSHI_API_KEY_ID not set in .env'); process.exit(1); }
-
+// Private key — env var takes priority (Railway), fall back to file (local dev)
 let privKey;
 if (process.env.KALSHI_PRIVATE_KEY) {
-  // Railway: key stored as env var (newlines as \n literals)
+  // Stored in Railway as a multi-line env var — normalise escaped newlines
   privKey = process.env.KALSHI_PRIVATE_KEY.replace(/\\n/g, '\n');
+  console.log('Using KALSHI_PRIVATE_KEY from environment variable');
 } else {
+  const keyPath = (process.env.KALSHI_PRIVATE_KEY_PATH || '~/.kalshi/private_key.pem')
+    .replace(/^~/, homedir());
   try {
-    privKey = readFileSync(KEY_PATH, 'utf8');
+    privKey = readFileSync(keyPath, 'utf8');
+    console.log(`Using private key from file: ${keyPath}`);
   } catch (e) {
-    console.error(`Cannot read private key at ${KEY_PATH}: ${e.message}`);
+    console.error(`Cannot read private key — set KALSHI_PRIVATE_KEY env var or fix path: ${e.message}`);
     process.exit(1);
   }
 }
