@@ -30,7 +30,8 @@ export function useKalshiData() {
         kalshi.getOrders(200),
       ]);
 
-      const balance     = balanceRes.value?.balance     || null;
+      // Pass the full response object — usePortfolioStats reads balance.balance (cents)
+      const balance     = balanceRes.value || null;
       const positions   = posRes.value?.market_positions   || posRes.value?.positions   || [];
       const settlements = settleRes.value?.settlements || settleRes.value?.market_settlements || [];
       const orders      = ordersRes.value?.orders      || [];
