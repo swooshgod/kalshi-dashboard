@@ -14,32 +14,14 @@ import 'dotenv/config';
 import express from 'express';
 import cors    from 'cors';
 import { createSign }            from 'crypto';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { homedir }               from 'os';
 
 console.log('[proxy] Imports loaded OK');
 
-// Strategy performance DB (SQLite) — local only; graceful no-op on Railway
-let getStrategyStats, getAllStats, getRecentBets;
-try {
-  // Only attempt if the file actually exists (local dev environment)
-  const { fileURLToPath } = await import('url');
-  const { join }           = await import('path');
-  const __dir  = fileURLToPath(new URL('.', import.meta.url));
-  const dbPath = join(__dir, '../../../../clawd/skills/kalshi-weather/strategy-db.mjs');
-  if (existsSync(dbPath)) {
-    console.log('[proxy] Loading strategy-db from', dbPath);
-    const mod    = await import(dbPath);
-    getStrategyStats = mod.getStrategyStats;
-    getAllStats       = mod.getAllStats;
-    getRecentBets     = mod.getRecentBets;
-    console.log('[proxy] strategy-db loaded OK');
-  } else {
-    console.log('[proxy] strategy-db not found at path — perf endpoints will return empty (Railway mode)');
-  }
-} catch (e) {
-  console.warn('[proxy] strategy-db load skipped:', e.message);
-}
+// Strategy performance DB — bundled in this repo, works on Railway + local
+import { getStrategyStats, getAllStats, getRecentBets } from './perf-db.js';
+console.log('[proxy] perf-db imported OK');
 
 const app  = express();
 const PORT = process.env.PROXY_PORT || process.env.PORT || 3001;
@@ -126,25 +108,22 @@ app.all('/api/*', async (req, res) => {
 
 // ── Strategy Performance API ─────────────────────────────────────────────────
 app.get('/perf/all', (_, res) => {
-  if (!getAllStats) return res.json({ strategies: [], note: 'DB not available (Railway mode)' });
   try { res.json({ strategies: getAllStats(), updatedAt: new Date().toISOString() }); }
   catch (e) { console.error('[proxy] /perf/all error:', e.message); res.status(500).json({ error: e.message }); }
 });
 
 app.get('/perf/:strategy', (req, res) => {
-  if (!getStrategyStats) return res.json({ strategy: req.params.strategy, totalBets: 0, note: 'DB not available' });
   try { res.json(getStrategyStats(req.params.strategy)); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/perf-bets/recent', (req, res) => {
-  if (!getRecentBets) return res.json({ bets: [] });
   try { res.json({ bets: getRecentBets(parseInt(req.query.limit) || 50) }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/health', (_, res) => {
-  res.json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...', perfDb: !!getAllStats });
+  res.json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...', perfDb: true });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
