@@ -14,8 +14,14 @@ import 'dotenv/config';
 import express from 'express';
 import cors    from 'cors';
 import { createSign }            from 'crypto';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { homedir }               from 'os';
+import { fileURLToPath }         from 'url';
+import { join, dirname }         from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// dist/ is two levels up from src/server/
+const DIST_DIR = join(__dirname, '../../dist');
 
 console.log('[proxy] Imports loaded OK');
 
@@ -125,6 +131,19 @@ app.get('/perf-bets/recent', (req, res) => {
 app.get('/health', (_, res) => {
   res.json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...', perfDb: true });
 });
+
+// ── Serve React frontend from dist/ ─────────────────────────────────────────
+if (existsSync(DIST_DIR)) {
+  console.log('[proxy] Serving static files from', DIST_DIR);
+  app.use(express.static(DIST_DIR));
+  // Catch-all: return index.html for any unmatched route (client-side routing)
+  app.get('*', (req, res) => {
+    res.sendFile(join(DIST_DIR, 'index.html'));
+  });
+} else {
+  console.warn('[proxy] dist/ not found — run npm run build first');
+  app.get('/', (_, res) => res.send('Dashboard not built. Run: npm run build'));
+}
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 try {
