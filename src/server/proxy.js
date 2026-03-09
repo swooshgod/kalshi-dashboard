@@ -128,8 +128,9 @@ app.get('/perf-bets/recent', (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Health check — must be before static middleware so Railway probe always gets JSON
 app.get('/health', (_, res) => {
-  res.json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...', perfDb: true });
+  res.status(200).json({ ok: true, keyId: KEY_ID.slice(0, 8) + '...', perfDb: true });
 });
 
 // ── Serve React frontend from dist/ ─────────────────────────────────────────
@@ -147,9 +148,9 @@ if (existsSync(DIST_DIR)) {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 try {
-  app.listen(PORT, () => {
-    console.log(`[proxy] ✅ Listening on port ${PORT}`);
-    console.log(`[proxy] Kalshi key: ${KEY_ID.slice(0, 8)}... | perf DB: ${!!getAllStats}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[proxy] ✅ Listening on 0.0.0.0:${PORT}`);
+    console.log(`[proxy] Kalshi key: ${KEY_ID.slice(0, 8)}... | perf DB: true`);
   });
 } catch (e) {
   console.error('[proxy] FATAL: app.listen failed —', e.message);
