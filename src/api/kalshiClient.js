@@ -4,7 +4,8 @@
  * Never put private keys in the browser.
  */
 
-const PROXY = import.meta.env.VITE_PROXY_URL || '/api';
+// Always use relative URLs — works on Railway (same-origin) and Vite dev (proxied)
+const PROXY = '/api';
 const MOCK  = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 const CACHE = new Map();

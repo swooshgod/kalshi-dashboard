@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
-// Empty string = relative URL — works on any host (Railway, local, Vercel)
-// Set VITE_PROXY_URL only if the API server is on a different origin
-const PROXY = import.meta.env.VITE_PROXY_URL || '';
+// Always relative — same server handles /perf/* and /api/* on Railway + Vite dev proxy
+const PROXY = '';
 
 const STRATEGIES = [
   { key: 'weather',     label: 'Weather Hunter',   color: '#06B6D4', icon: '🌡️' },

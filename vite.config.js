@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      }
+      '/api': { target: 'http://localhost:3001', changeOrigin: true },
+      '/perf': { target: 'http://localhost:3001', changeOrigin: true },
+      '/perf-bets': { target: 'http://localhost:3001', changeOrigin: true },
+      '/health': { target: 'http://localhost:3001', changeOrigin: true },
     }
   }
 })
