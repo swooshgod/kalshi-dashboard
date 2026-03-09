@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
-const PROXY = import.meta.env.VITE_PROXY_URL || 'http://localhost:3001';
+// Empty string = relative URL — works on any host (Railway, local, Vercel)
+// Set VITE_PROXY_URL only if the API server is on a different origin
+const PROXY = import.meta.env.VITE_PROXY_URL || '';
 
 const STRATEGIES = [
   { key: 'weather',     label: 'Weather Hunter',   color: '#06B6D4', icon: '🌡️' },
@@ -298,7 +300,7 @@ export default function StrategyDashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-sans">
-      {/* Page header */}
+      {/* Page header — no top padding needed, App.jsx handles the offset */}
       <div className="border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold tracking-tight">🔭 Scout Strategy Performance</h1>
